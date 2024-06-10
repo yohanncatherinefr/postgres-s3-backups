@@ -6,7 +6,7 @@ import { filesize } from "filesize";
 import path from "path";
 import os from "os";
 
-import { env } from "./env";
+import { env } from "./env.js";
 
 const uploadToS3 = async ({ name, path }: { name: string, path: string }) => {
   console.log("Uploading backup to S3...");
@@ -20,6 +20,10 @@ const uploadToS3 = async ({ name, path }: { name: string, path: string }) => {
   if (env.AWS_S3_ENDPOINT) {
     console.log(`Using custom endpoint: ${env.AWS_S3_ENDPOINT}`)
     clientOptions['endpoint'] = env.AWS_S3_ENDPOINT;
+  }
+
+  if (env.BUCKET_SUBFOLDER) {
+    name = env.BUCKET_SUBFOLDER + "/" + name;
   }
 
   const client = new S3Client(clientOptions);
@@ -89,7 +93,7 @@ export const backup = async () => {
 
   const date = new Date().toISOString();
   const timestamp = date.replace(/[:.]+/g, '-');
-  const filename = `backup-${timestamp}.tar.gz`;
+  const filename = `${env.BACKUP_FILE_PREFIX}-${timestamp}.tar.gz`;
   const filepath = path.join(os.tmpdir(), filename);
 
   await dumpToFile(filepath);
